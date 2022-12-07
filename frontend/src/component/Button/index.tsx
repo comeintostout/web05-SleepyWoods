@@ -1,13 +1,20 @@
-import axios from 'axios';
 import { MouseEventHandler } from 'react';
-import { button, signButton, signupButton, arrowButton } from './button.styled';
+import {
+  button,
+  signButton,
+  signupButton,
+  arrowButton,
+  userChangeButton,
+  withdrawalBtn,
+} from './button.styled';
 
 type mainButtonType = {
   children: JSX.Element | string;
   type: string;
+  handleClick?: MouseEventHandler<HTMLButtonElement>;
 };
 
-type signupButtonType = {
+type MouseHandlerButtonType = {
   children: JSX.Element | string;
   event: MouseEventHandler;
 };
@@ -17,29 +24,15 @@ type arrowButtonType = {
   event: MouseEventHandler;
 };
 
-export const MainButton = ({ children, type }: mainButtonType) => {
+type WithdrawalButtonType = { event: MouseEventHandler };
+
+export const MainButton = ({ children, type, handleClick }: mainButtonType) => {
   return (
-    <button type="button" css={button(type)}>
+    <button type="button" css={button(type)} onClick={handleClick}>
       {children}
     </button>
   );
 };
-
-// export const SignButton = ({ type }: { type: string }) => {
-//   const handleClickEvent = async () => {
-//     await axios({
-//       method: 'GET',
-//       url: `http://localhost:3333/user/login?social=${type}`,
-//       withCredentials: true,
-//     });
-//   };
-
-//   return (
-//     <button type="button" css={signButton(type)} onClick={handleClickEvent}>
-//       {type}로 로그인하기
-//     </button>
-//   );
-// };
 
 export const SignButton = ({ type }: { type: string }) => {
   const oauth = `http://localhost:3333/user/login?social=${type}`;
@@ -53,7 +46,7 @@ export const SignButton = ({ type }: { type: string }) => {
   );
 };
 
-export const SignupButton = ({ children, event }: signupButtonType) => {
+export const SignupButton = ({ children, event }: MouseHandlerButtonType) => {
   return (
     <button type="button" css={signupButton} onClick={event}>
       {children}
@@ -64,5 +57,24 @@ export const SignupButton = ({ children, event }: signupButtonType) => {
 export const ArrowButton = ({ type, event }: arrowButtonType) => {
   return (
     <button type="button" css={arrowButton(type)} onClick={event}></button>
+  );
+};
+
+export const UserChangeButton = ({
+  children,
+  event,
+}: MouseHandlerButtonType) => {
+  return (
+    <button type="button" css={userChangeButton} onClick={event}>
+      {children}
+    </button>
+  );
+};
+
+export const WithdrawalButton = ({ event }: WithdrawalButtonType) => {
+  return (
+    <button type="button" css={withdrawalBtn} onClick={event}>
+      회원탈퇴
+    </button>
   );
 };

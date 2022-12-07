@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import theme from '../../styles/theme';
-import { backgroundImage } from '../../styles/mixin.styled';
+import { backgroundImage, flexCenter } from '../../styles/mixin.styled';
 import prevArrow from '../../assets/prevArrow.svg';
 import nextArrow from '../../assets/nextArrow.svg';
 import social from '../../styles/social';
@@ -40,7 +40,6 @@ export const signButton = (type: string) => css`
 
 export const signupButton = () => css`
   padding: 10px 30px;
-  margin-top: 30px;
   border-radius: 20px;
   background-color: ${theme.lightGreen};
 
@@ -55,4 +54,28 @@ export const arrowButton = (type: string) => css`
   min-height: 40px;
 
   ${backgroundImage(type === 'prev' ? prevArrow : nextArrow)}
+`;
+
+export const userChangeButton = css`
+  ${flexCenter}
+
+  width: 100%;
+  height: 30px;
+  border-radius: 10px;
+  background-color: ${theme.lightGreen};
+  font-size: 14px;
+
+  :hover {
+    background-color: ${theme.green};
+  }
+`;
+
+export const withdrawalBtn = css`
+  ${flexCenter}
+
+  width: 100%;
+  height: 30px;
+  border-radius: 10px;
+  background-color: ${theme.red};
+  font-size: 12px;
 `;

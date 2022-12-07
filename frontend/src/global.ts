@@ -6,7 +6,9 @@ export const global = css`
   ${emotionReset}
 
   *,
-  body {
+  body,
+  *::after,
+  *::before {
     box-sizing: border-box;
     font-family: 'NanumSquareRound';
   }
@@ -17,6 +19,10 @@ export const global = css`
     overflow: hidden;
   }
 
+  canvas {
+    margin: 0 !important;
+  }
+
   .srOnly {
     overflow: hidden;
     position: absolute !important;
@@ -25,6 +31,10 @@ export const global = css`
     width: 1px;
     height: 1px;
     margin: -1px;
+  }
+
+  .hidden {
+    display: none !important;
   }
 
   input:focus,

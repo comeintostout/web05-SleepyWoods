@@ -5,7 +5,7 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   pixelArt: true,
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: '100%',
     height: '100%',
@@ -16,6 +16,10 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
       gravity: { y: 0 },
       debug: false,
     },
+  },
+  fps: {
+    target: 60,
+    forceSetTimeOut: true,
   },
   autoFocus: true,
   scene: Game,

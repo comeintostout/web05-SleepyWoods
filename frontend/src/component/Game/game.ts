@@ -1,200 +1,193 @@
-const responsiveness = 5;
-const moveObj: { [key: string]: number[] } = {
-  left: [-responsiveness, 0],
-  right: [responsiveness, 0],
-  up: [0, -responsiveness],
-  down: [0, responsiveness],
-};
+import { Socket } from 'socket.io-client';
+import { MyPlayer } from './Phaser/Player/myPlayer';
+import { OtherPlayer } from './Phaser/Player/otherPlayer';
+import { emitter } from './util';
 
 export default class Game extends Phaser.Scene {
-  character: Phaser.GameObjects.Sprite | undefined;
-  hair: Phaser.GameObjects.Sprite | undefined;
-  state: string = 'right';
-  direction: string = 'wait';
-  x: number;
-  y: number;
-  temp: string;
+  myPlayer?: MyPlayer;
+  otherPlayer: { [key: string]: OtherPlayer };
+  socket?: Socket;
+  autoPlay: boolean;
 
   constructor(config: Phaser.Types.Core.GameConfig) {
     super(config);
 
-    this.character;
-    this.hair;
-    this.temp = 'right';
-    this.direction = 'right';
-    this.state = 'wait';
-    this.x = -25;
-    this.y = 400;
+    this.socket;
+    this.myPlayer;
+    this.otherPlayer = {};
+    this.autoPlay = false;
+  }
+
+  init() {
+    emitter.on('init', (data: any) => {
+      this.socket = data.socket.connect();
+
+      this.myPlayer = new MyPlayer(
+        this,
+        -25,
+        400,
+        data.id,
+        data.hair,
+        data.nickname,
+        data.socket
+      );
+
+      this.socket?.on('connect', () => {
+        this.socketInit();
+      });
+    });
+
+    emitter.on('updateNickname', (nickname: string) => {
+      this.myPlayer?.updateNickname(nickname);
+    });
+
+    emitter.on('updateHair', (hair: string) => {
+      this.myPlayer?.updateHair(hair);
+    });
   }
 
   preload() {
     this.load.image('background', './src/assets/background.png');
+    this.load.audio('christmas', ['./src/assets/audio/christmas.mp3']);
 
-    this.load.spritesheet(
-      'character-wait',
-      './src/assets/character/waiting/base_waiting_strip9.png',
-      { frameWidth: 96, frameHeight: 64 }
-    );
+    // 캐릭터 동작
+    const actions = ['wait', 'walk', 'run', 'roll', 'jump'];
 
-    this.load.spritesheet(
-      'hair-wait',
-      './src/assets/character/waiting/bowlhair_waiting_strip9.png',
-      { frameWidth: 96, frameHeight: 64 }
-    );
+    actions.forEach((action: string) => {
+      this.load.atlas(
+        action,
+        `./src/assets/character/${action}/${action}.png`,
+        `./src/assets/character/sprite.json`
+      );
+    });
 
-    this.load.spritesheet(
-      'character-walk',
-      './src/assets/character/walking/base_walk_strip8.png',
-      { frameWidth: 96, frameHeight: 64 }
-    );
-
-    this.load.spritesheet(
-      'hair-walk',
-      './src/assets/character/walking/bowlhair_walk_strip8.png',
-      { frameWidth: 96, frameHeight: 64 }
-    );
-
-    this.load.spritesheet(
-      'character-roll',
-      './src/assets/character/roll/base_roll_strip10.png',
-      { frameWidth: 96, frameHeight: 64 }
-    );
-
-    this.load.spritesheet(
-      'hair-roll',
-      './src/assets/character/roll/bowlhair_roll_strip10.png',
-      { frameWidth: 96, frameHeight: 64 }
-    );
+    // 이펙트
+    this.load.spritesheet('dust', './src/assets/character/dust.png', {
+      frameWidth: 24,
+      frameHeight: 9,
+    });
   }
 
   create() {
     this.add.image(0, 0, 'background').setScale(3);
+    this.sound.add('christmas');
+
+    const spriteInfo = [
+      { action: 'wait', start: 1, end: 9 },
+      { action: 'walk', start: 1, end: 8 },
+      { action: 'run', start: 1, end: 8 },
+      { action: 'roll', start: 2, end: 5 },
+      { action: 'jump', start: 1, end: 9 },
+    ];
+
+    const hairInfo = [
+      'nohair',
+      'longhair',
+      'mophair',
+      'shorthair',
+      'spikeyhair',
+      'bowlhair',
+      'curlyhair',
+    ];
+
+    spriteInfo.forEach(
+      (info: { action: string; start: number; end: number }) => {
+        const { action, start, end } = info;
+
+        this.anims.create({
+          key: `character-${action}`,
+          frames: this.anims.generateFrameNames(action, {
+            prefix: 'base',
+            start,
+            end,
+          }),
+          frameRate: 10,
+          repeat: -1,
+        });
+
+        hairInfo.forEach((hair: string) => {
+          this.anims.create({
+            key: `${hair}-${action}`,
+            frames: this.anims.generateFrameNames(action, {
+              prefix: `${hair}`,
+              start,
+              end,
+            }),
+            frameRate: 10,
+            repeat: -1,
+          });
+        });
+      }
+    );
 
     this.anims.create({
-      key: 'character-wait',
-      frames: this.anims.generateFrameNumbers('character-wait', {
+      key: 'dust',
+      frames: this.anims.generateFrameNames('dust', {
         start: 0,
-        end: 8,
+        end: 7,
       }),
       frameRate: 10,
       repeat: -1,
     });
 
-    this.anims.create({
-      key: 'hair-wait',
-      frames: this.anims.generateFrameNumbers('hair-wait', {
-        start: 0,
-        end: 8,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'character-walk',
-      frames: this.anims.generateFrameNumbers('character-walk', {
-        start: 0,
-        end: 8,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'hair-walk',
-      frames: this.anims.generateFrameNumbers('hair-walk', {
-        start: 0,
-        end: 8,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'character-roll',
-      frames: this.anims.generateFrameNumbers('character-roll', {
-        start: 0,
-        end: 8,
-      }),
-      frameRate: 15,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'hair-roll',
-      frames: this.anims.generateFrameNumbers('hair-roll', {
-        start: 0,
-        end: 8,
-      }),
-      frameRate: 15,
-      repeat: -1,
-    });
-
-    this.character = this.add.sprite(-25, 400, 'character-wait');
-    this.character.setScale(3);
-
-    this.hair = this.add.sprite(-25, 400, 'hair-wait');
-    this.hair.setScale(3);
-
-    this.changeState();
-
-    this.cameras.main.startFollow(this.character, true);
+    emitter.emit('ready');
   }
 
   update() {
-    const cursors = this.input.keyboard.createCursorKeys();
-    const keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    const prevState = this.state;
+    this.myPlayer?.update();
 
-    if (cursors.left.isDown) {
-      this.state = 'walk';
-      this.changePosition('left');
-      if (this.direction === 'right') this.changeDirection();
-      this.direction = 'left';
-    } else if (cursors.right.isDown) {
-      this.state = 'walk';
-      this.changePosition('right');
-      if (this.direction === 'left') this.changeDirection();
-      this.direction = 'right';
-    } else if (cursors.up.isDown) {
-      this.state = 'walk';
-      this.changePosition('up');
-    } else if (cursors.down.isDown) {
-      this.state = 'walk';
-      this.changePosition('down');
-    } else this.state = 'wait';
-
-    if (keyR.isDown) {
-      this.changePosition(this.temp);
-      this.state = 'roll';
-    }
-
-    if (prevState !== this.state) this.changeState();
+    this.musicControll();
   }
 
-  changeState() {
-    if (!this.character || !this.hair) return;
+  socketInit() {
+    if (!this.socket) return;
 
-    this.character.play(`character-${this.state}`);
-    this.hair.play(`hair-${this.state}`);
+    this.socket.on('userInitiated', (data: any) => {
+      if (!Array.isArray(data)) data = [data];
+
+      data.forEach((user: any) => {
+        const id = user.id.toString().trim();
+        if (this.myPlayer?.id === id) return;
+        if (this.otherPlayer[id]) return;
+
+        this.otherPlayer[id] = new OtherPlayer(this, user);
+      });
+    });
+
+    this.socket.on('userCreated', (user: any) => {
+      const id = user.id.toString().trim();
+      this.otherPlayer[id] = new OtherPlayer(this, user);
+    });
+
+    this.socket.on('move', (data: any) => {
+      const id = data.id.toString().trim();
+      this.otherPlayer[id].update(data.state, data.x, data.y);
+    });
+
+    this.socket.on('userLeaved', (data: any) => {
+      const id = data.id.toString().trim();
+      this.otherPlayer[id].delete();
+      delete this.otherPlayer[id];
+    });
+
+    this.socket.on('userDataChanged', (data: any) => {
+      const { id, nickname, characterName } = data;
+      this.otherPlayer[id].updateNickname(nickname);
+      this.otherPlayer[id].updateHair(characterName);
+    });
   }
 
-  changeDirection() {
-    if (!this.character || !this.hair) return;
+  musicControll() {
+    const music = this.sound.get('christmas');
+    if (this.autoPlay && !this.sound.get('christmas').isPlaying) music.play();
 
-    this.character.toggleFlipX();
-    this.hair.toggleFlipX();
-  }
+    emitter.on('musicControll', (state: boolean) => {
+      const changeState = music.isPlaying === state ? false : true;
 
-  changePosition(dir: string) {
-    this.temp = dir;
-    if (!this.character || !this.hair) return;
+      if (!changeState) return;
 
-    const [x, y] = moveObj[dir];
-    this.x += x;
-    this.y += y;
-
-    this.character.setPosition(this.x, this.y);
-    this.hair.setPosition(this.x, this.y);
+      music.isPlaying ? music.stop() : music.play();
+      this.autoPlay = !this.autoPlay;
+    });
   }
 }

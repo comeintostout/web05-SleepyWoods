@@ -3,8 +3,11 @@ import Town from './page/Town';
 import Main from './page/Main';
 import Signin from './page/Signin';
 import Signup from './page/Signup';
+import { routerGuard } from './guard';
 
 const Router = () => {
+  routerGuard();
+
   return (
     <Routes>
       <Route index element={<Main />} />
