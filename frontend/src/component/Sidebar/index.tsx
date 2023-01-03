@@ -1,4 +1,4 @@
-import { MouseEvent, useState } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
 import { sidebarWrapper, sidebar, toggleButton } from './sidebar.styled';
 import Mypage from './Mypage';
 
@@ -14,6 +14,10 @@ import { EmotionJSX } from '@emotion/react/types/jsx-namespace';
 import Friends from './Friends';
 import Setting from './Setting';
 import Chat from './Chat';
+import { useRecoilState } from 'recoil';
+import { sidebarState } from '../../store/atom/sidebar';
+import { webRTCState } from '../../store/atom/deviceSetting';
+import { emitter } from '../Game/util';
 
 type componentType = {
   [key: string]: EmotionJSX.Element;
@@ -27,11 +31,10 @@ const component: componentType = {
 };
 
 const Sidebar = () => {
-  const [isOpen, setOpen] = useState(true);
-  const [isMicOn, setMic] = useState(false);
-  const [isCamOn, setCam] = useState(true);
+  const [isOpen, setOpen] = useState(false);
+  const [webRTC, setWebRTC] = useRecoilState(webRTCState);
 
-  const [currentTab, setCurrentTab] = useState<string>('friends');
+  const [currentTab, setCurrentTab] = useRecoilState(sidebarState);
 
   const changeTab = (e: MouseEvent) => {
     const navList = e.currentTarget.children;
@@ -43,14 +46,22 @@ const Sidebar = () => {
       const name = node.id;
       const $img = node.children[0];
 
-      $img === target
-        ? ($img.classList.add('active'), setCurrentTab(name))
-        : $img.classList.remove('active');
+      $img === target && setCurrentTab(name);
     });
   };
 
+  useEffect(() => {
+    emitter.on('closeContent', () => {
+      setOpen(false);
+    });
+
+    return () => {
+      emitter.removeListener('closeContent');
+    };
+  }, []);
+
   return (
-    <aside css={sidebarWrapper(isOpen)}>
+    <aside css={sidebarWrapper(isOpen, currentTab)}>
       <div css={sidebar}>
         <nav className="sidebar-tab">
           <ul onClick={changeTab}>
@@ -58,7 +69,7 @@ const Sidebar = () => {
               <img src={mypage} alt="마이페이지"></img>
             </li>
             <li id="friends">
-              <img className="active" src={friends} alt="친구목록"></img>
+              <img src={friends} alt="친구목록"></img>
             </li>
             <li id="chatting">
               <img src={chatting} alt="채팅"></img>
@@ -71,15 +82,21 @@ const Sidebar = () => {
         <section className="sidebar-content">{component[currentTab]}</section>
         <section className="sidebar-setting">
           <ul>
-            <li onClick={() => setMic(!isMicOn)}>
-              {isMicOn ? (
+            <li
+              onClick={() =>
+                setWebRTC(webRTC => ({ ...webRTC, mic: !webRTC.mic }))
+              }>
+              {webRTC.mic ? (
                 <img src={micOn} alt="마이크 on"></img>
               ) : (
                 <img src={micOff} alt="마이크 off"></img>
               )}
             </li>
-            <li onClick={() => setCam(!isCamOn)}>
-              {isCamOn ? (
+            <li
+              onClick={() =>
+                setWebRTC(webRTC => ({ ...webRTC, cam: !webRTC.cam }))
+              }>
+              {webRTC.cam ? (
                 <img src={camOn} alt="카메라 on"></img>
               ) : (
                 <img src={camOff} alt="카메라 off"></img>

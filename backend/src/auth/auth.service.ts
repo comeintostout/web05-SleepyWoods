@@ -18,10 +18,19 @@ export class AuthService {
     };
   }
 
-  verify(accessToken: string) {
+  verify(accessToken: string): UserDataDto | false {
     try {
-      const userData = this.jwtService.verify(accessToken);
-      return userData;
+      const { id, nickname, social, characterName } =
+        this.jwtService.verify(accessToken);
+      if (!nickname) {
+        return false;
+      }
+      return {
+        id,
+        nickname,
+        social,
+        characterName,
+      };
     } catch (e) {
       return false;
     }

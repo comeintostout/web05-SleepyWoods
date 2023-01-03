@@ -3,30 +3,30 @@ import tree from '../../assets/tree.svg';
 import trophy from '../../assets/trophy.svg';
 import like from '../../assets/icon/like.svg';
 import unlike from '../../assets/icon/unlike.svg';
-import { flexCenter } from '../../styles/mixin.styled';
+import close from '../../assets/icon/close.svg';
+import { backgroundImage, flexCenter } from '../../styles/mixin.styled';
+import theme from '../../styles/theme';
 
 export const sleepyBoardBtn = css`
   width: 60px;
   height: 60px;
 
   position: absolute;
-  bottom: 30px;
+  bottom: 55px;
   right: 30px;
-  background-image: url(${trophy});
-  background-repeat: no-repeat;
-  background-position: center;
+  ${backgroundImage(trophy)}
 `;
 
 export const modal = (animation: string) => css`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  ${flexCenter}
   flex-flow: column;
 
   width: 60%;
   min-width: 600px;
+  max-width: 800px;
   height: 60%;
   min-height: 400px;
+  max-height: 600px;
   padding: 20px;
 
   position: absolute;
@@ -119,8 +119,7 @@ export const user = (avatar: string) => css`
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background-image: url(${avatar});
-    background-repeat: no-repeat;
+    ${backgroundImage(avatar)}
     background-size: cover;
     vertical-align: middle;
     margin-right: 8px;
@@ -137,6 +136,7 @@ export const description = css`
   flex-grow: 1;
 
   width: 80%;
+  line-height: 20px;
   font-size: 12px;
   font-weight: 700;
 `;
@@ -149,7 +149,7 @@ export const time = css`
   font-weight: 700;
 `;
 
-export const likeBtn = (isLike: boolean) => css`
+export const likeBtn = (isLiked: boolean) => css`
   position: absolute;
   bottom: 20px;
   right: 20px;
@@ -160,17 +160,16 @@ export const likeBtn = (isLike: boolean) => css`
     display: block;
     width: 25px;
     height: 20px;
-    background-image: url(${isLike ? like : unlike});
-    background-repeat: no-repeat;
+    ${backgroundImage(isLiked ? like : unlike)}
     background-size: contain;
   }
 `;
 export const filterBtnBox = css`
   display: flex;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 `;
 
-export const filterBtn = (icon: string, width: number, height: number) => css`
+export const filterBtn = (isSelected: boolean, icon: string) => css`
   ${flexCenter}
   width: 80px;
   height: 40px;
@@ -178,15 +177,15 @@ export const filterBtn = (icon: string, width: number, height: number) => css`
   border-radius: 20px;
   margin-left: 15px;
   font-weight: 900;
+  ${isSelected && 'background-color: white;'}
 
   ::after {
     content: '';
     display: ${icon ? 'block' : 'none'};
-    width: ${width + 'px'};
-    height: ${height + 'px'};
-    background-image: url(${icon});
-    background-repeat: no-repeat;
-    background-size: cover;
+    width: 22px;
+    height: 18px;
+    ${backgroundImage(icon)}
+    background-size: contain;
   }
 
   :hover {
@@ -224,11 +223,30 @@ export const tabBtn = css`
     display: inline-block;
     width: 20px;
     height: 20px;
-    background-image: url(${tree});
-    background-repeat: no-repeat;
+    ${backgroundImage(tree)}
     vertical-align: middle;
     margin-left: 5px;
   }
+`;
+
+export const selectMonthBox = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 100%;
+  height: 10%;
+  margin-bottom: 10px;
+`;
+
+export const selectMonth = (isSelected: boolean) => css`
+  ${flexCenter}
+  ${isSelected && 'background-color: white;'};
+
+  width: 30%;
+  height: 30px;
+  border-radius: 10px;
+  box-shadow: 1px 1px 4px rgb(0 0 0 / 25%);
 `;
 
 export const topRankContainer = css`
@@ -238,7 +256,7 @@ export const topRankContainer = css`
   flex-flow: column;
 
   width: 100%;
-  height: 30%;
+  height: 25%;
   padding: 20px 30px;
   background-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.25);
@@ -255,7 +273,7 @@ export const topRankContainer = css`
 
 export const rankContainer = css`
   width: 100%;
-  height: 60%;
+  height: 50%;
 
   padding: 20px;
   background-color: rgba(255, 255, 255, 0.4);
@@ -273,5 +291,39 @@ export const rankContainer = css`
     justify-content: space-between;
     align-items: center;
     padding: 10px;
+  }
+`;
+
+export const nickname = (str: string) => css`
+  ::before {
+    content: '${str}';
+    display: inline-block;
+    padding-right: 15px;
+  }
+`;
+
+export const infoMsg = css`
+  color: ${theme.red};
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+`;
+
+export const closeBtn = css`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  padding: 5px;
+
+  ::after {
+    content: '';
+    display: block;
+    width: 20px;
+    height: 20px;
+    ${backgroundImage(close)}
+    background-size: contain;
   }
 `;

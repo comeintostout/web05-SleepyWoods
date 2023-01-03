@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { emitter } from '../Game/util';
 import RankContainer from './RankContainer';
 import * as style from './sleepyboard.styled';
 import SleepyBoardContainer from './SleepyBoardContainer';
@@ -19,17 +20,28 @@ const SleepyBoard = () => {
     }
   };
 
+  useEffect(() => {
+    emitter.on('closeContent', () => {
+      setAnimation('close');
+      setIsShowModal(false);
+    });
+
+    return () => {
+      emitter.removeListener('closeContent');
+    };
+  }, []);
+
   return (
     <>
       {isShowModal && (
         <>
           <section css={style.modal(animation)}>
+            <button
+              type="button"
+              css={style.closeBtn}
+              onClick={handleModal}></button>
             <Tab selected={tab} setTab={setTab} />
-            {tab === 'board' ? (
-              <SleepyBoardContainer animation={animation} />
-            ) : (
-              <RankContainer animation={animation} />
-            )}
+            {tab === 'board' ? <SleepyBoardContainer /> : <RankContainer />}
           </section>
         </>
       )}

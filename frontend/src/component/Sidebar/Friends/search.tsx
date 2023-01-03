@@ -1,18 +1,18 @@
 import axios from 'axios';
 import { FormEvent, MouseEvent, useState } from 'react';
-import { useRecoilState } from 'recoil';
 import { friendsState } from '../../../store/atom/friends';
-import { friendType } from './friends';
 import { findFriend } from './friends.styled';
-
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { socketState } from '../../../store/atom/socket';
 type nicknameType = {
   userId: string;
   isCalling: boolean;
-  isOnline: boolean;
+  status: string;
   nickname: string;
 };
 
 const Search = () => {
+  const socket = useRecoilValue(socketState);
   const [friends, setFriends] = useRecoilState(friendsState);
   const [searchWord, setSearchWord] = useState<string>('');
   const [nicknameList, setNicknameList] = useState<nicknameType[]>([]);
@@ -31,17 +31,24 @@ const Search = () => {
       try {
         const { data } = await axios.put(`/api/friendship/${selectedWord}`);
 
-        setFriends({
-          ...friends,
-          id: {
-            id: data.userId,
-            isOnline: false,
-            nickname: data.nickname,
-            isCalling: false,
-          },
-        });
-
         alert('팔로우 되었습니다.');
+        socket.emit(
+          'getUserState',
+          {
+            targetUserId: data.userId,
+          },
+          (userState: string) => {
+            setFriends({
+              ...friends,
+              [data.userId]: {
+                id: data.userId,
+                status: userState,
+                nickname: data.nickname,
+                isCalling: false,
+              },
+            });
+          }
+        );
       } catch {
         alert('팔로우 실패');
       }
@@ -73,7 +80,7 @@ const Search = () => {
             userId: 'none',
             nickname: '일치하는 유저가 없습니다.',
             isCalling: false,
-            isOnline: false,
+            status: 'offline',
           },
         ]);
       }

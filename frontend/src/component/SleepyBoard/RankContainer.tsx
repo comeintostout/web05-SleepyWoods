@@ -3,89 +3,94 @@ import * as style from './sleepyboard.styled';
 
 import axios from 'axios';
 import { formattingWalk } from './util';
+import { walkType } from '../../types/types';
 
-const RankContainer = ({ animation }: { animation: string }) => {
-  const [rank, setRank] = useState<any>([]);
+const RankContainer = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const dateList = [
+    {
+      year: month - 2 > 0 ? year : year - 1,
+      month: month - 2 < 0 ? 11 : month - 2,
+    },
+    {
+      year: month - 1 > 0 ? year : year - 1,
+      month: month - 2 < 0 ? 12 : month - 1,
+    },
+    { year: year, month: month },
+  ];
+
+  const [monthIdx, setMonthIdx] = useState(2);
+  const [filter, setFilter] = useState('all');
+  const [rank, setRank] = useState<walkType[]>([]);
   const medals = ['🥇', '🥈', '🥉'];
+
   useEffect(() => {
-    getRank('all');
-  }, []);
+    const getRank = async () => {
+      try {
+        const { data, status } = await axios(
+          `/api/achievement/walk?year=${dateList[monthIdx].year}&month=${dateList[monthIdx].month}&range=${filter}`
+        );
 
-  const getRank = async (key: string) => {
-    try {
-      // const { data, status } = API 요청
-      const status = 200;
-      const data = [
-        { nickname: '안현서', walk: 300020 },
-        { nickname: '이형진', walk: 300019 },
-        { nickname: '강성준', walk: 300018 },
-        { nickname: '원종빈', walk: 300017 },
-        { nickname: '원종빈', walk: 300016 },
-        { nickname: '원종빈', walk: 300015 },
-        { nickname: '원종빈', walk: 300014 },
-        { nickname: '원종빈', walk: 300013 },
-        { nickname: '원종빈', walk: 300012 },
-        { nickname: '원종빈', walk: 300011 },
-        { nickname: '원종빈', walk: 300010 },
-        { nickname: '원종빈', walk: 300009 },
-        { nickname: '원종빈', walk: 300008 },
-        { nickname: '원종빈', walk: 300007 },
-        { nickname: '원종빈', walk: 300006 },
-        { nickname: '원종빈', walk: 300005 },
-        { nickname: '원종빈', walk: 300004 },
-        { nickname: '원종빈', walk: 300003 },
-        { nickname: '원종빈', walk: 300002 },
-        { nickname: '원종빈', walk: 300001 },
-        { nickname: '원종빈', walk: 300000 },
-      ];
+        if (status === 200) setRank(data);
+      } catch (e) {}
+    };
 
-      if (status === 200) setRank(data);
-    } catch (e) {}
-  };
+    getRank();
+  }, [filter, monthIdx]);
 
   return (
     <>
       <nav css={style.filterBtnBox}>
         <button
           type="button"
-          onClick={() => getRank('all')}
-          css={style.filterBtn('', 0, 0)}>
+          onClick={() => setFilter('all')}
+          css={style.filterBtn(filter === 'all', '')}>
           All
         </button>
         <button
           type="button"
-          onClick={() => getRank('friend')}
-          css={style.filterBtn('', 0, 0)}>
+          onClick={() => setFilter('friend')}
+          css={style.filterBtn(filter === 'friend', '')}>
           Friend
         </button>
       </nav>
+
       <div css={style.contentWrapper}>
+        <div css={style.selectMonthBox}>
+          {dateList.map((date, idx: number) => (
+            <button
+              key={date.month}
+              css={style.selectMonth(monthIdx === idx)}
+              onClick={() => setMonthIdx(idx)}>
+              {`${date.year}년 ${date.month}월`}
+            </button>
+          ))}
+        </div>
         <ul css={style.topRankContainer}>
-          {rank.map((user: any, idx: number) => {
+          {rank.map((user, idx: number) => {
             if (idx >= 3) return;
             return (
               <li key={idx}>
-                <span>
-                  {medals[idx]} {user.nickname}
-                </span>
-                <span>{formattingWalk(user.walk) + ' 보'}</span>
+                <span css={style.nickname(medals[idx])}>{user.nickname}</span>
+                <span>{formattingWalk(user.walkcount) + ' 보'}</span>
               </li>
             );
           })}
         </ul>
         <ul css={style.rankContainer}>
-          {rank.map((user: any, idx: number) => {
+          {rank.map((user, idx: number) => {
             if (idx < 3) return;
             return (
               <li key={idx}>
-                <span>
-                  {idx + 1 + '.'} {user.nickname}
-                </span>
-                <span>{formattingWalk(user.walk) + ' 보'}</span>
+                <span css={style.nickname(idx + 1 + '.')}>{user.nickname}</span>
+                <span>{formattingWalk(user.walkcount) + ' 보'}</span>
               </li>
             );
           })}
         </ul>
+        <div css={style.infoMsg}>걸음수는 자정에 최신화됩니다!</div>
       </div>
     </>
   );

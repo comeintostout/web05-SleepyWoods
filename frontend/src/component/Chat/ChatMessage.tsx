@@ -3,6 +3,7 @@ import * as style from './chat.styled';
 import { useRecoilValue } from 'recoil';
 import { socketState } from '../../store/atom/socket';
 import ChatContent from './ChatContent';
+import { chatType, userType } from '../../types/types';
 
 const ChatMessage = ({
   updateChat,
@@ -12,25 +13,25 @@ const ChatMessage = ({
 }: {
   updateChat: Function;
   isExtend: boolean;
-  chatDatas: any;
+  chatDatas: chatType[];
   setChatDatas: Function;
 }) => {
   const socket = useRecoilValue(socketState);
-  const chatRef = useRef<null | HTMLUListElement>(null);
+  const chatRef = useRef<null | HTMLDivElement>(null);
 
   useEffect(() => {
     // 채팅창 초기화
     const sessionStorageChat = sessionStorage.getItem('chat');
     if (sessionStorageChat) {
-      setChatDatas(JSON.parse(sessionStorageChat));
+      setChatDatas(() => JSON.parse(sessionStorageChat));
     }
 
     // 다른 사람의 채팅받기
-    socket.on('publicChat', (chat: any) => {
+    const publicChat = (chat: chatType) => {
       updateChat(chat);
-    });
+    };
 
-    socket.on('userCreated', (data: any) => {
+    const userCreated = (data: userType) => {
       const chat = {
         type: 'info',
         nickname: data.nickname,
@@ -38,9 +39,9 @@ const ChatMessage = ({
         message: '님이 입장하셨습니다.',
       };
       updateChat(chat);
-    });
+    };
 
-    socket.on('userLeaved', (data: any) => {
+    const userLeaved = (data: userType) => {
       const chat = {
         type: 'info',
         nickname: data.nickname,
@@ -48,12 +49,16 @@ const ChatMessage = ({
         message: '님이 퇴장하셨습니다.',
       };
       updateChat(chat);
-    });
+    };
+
+    socket.on('publicChat', publicChat);
+    socket.on('userCreated', userCreated);
+    socket.on('userLeaved', userLeaved);
 
     return () => {
-      socket.removeListener('publicChat');
-      socket.removeListener('userCreated');
-      socket.removeListener('userLeaved');
+      socket.removeListener('publicChat', publicChat);
+      socket.removeListener('userCreated', userCreated);
+      socket.removeListener('userLeaved', userLeaved);
     };
   }, []);
 
@@ -64,11 +69,13 @@ const ChatMessage = ({
   }, [chatDatas]);
 
   return (
-    <ul css={style.chatText(isExtend)} ref={chatRef}>
-      {chatDatas.map((data: any, idx: any) => (
-        <ChatContent data={data} key={idx} />
-      ))}
-    </ul>
+    <div css={style.chatTextWrapper(isExtend)} ref={chatRef}>
+      <ul css={style.chatText}>
+        {chatDatas.map((data, idx: number) => (
+          <ChatContent data={data} key={idx} />
+        ))}
+      </ul>
+    </div>
   );
 };
 

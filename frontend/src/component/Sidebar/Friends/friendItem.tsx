@@ -4,17 +4,28 @@ import { friendItemWrapper, userName } from './friends.styled';
 import message from '../../../assets/icon/messageIcon.svg';
 import unfollow from '../../../assets/icon/unfollowIcon.svg';
 import axios from 'axios';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
 import { friendsState } from '../../../store/atom/friends';
-import { useEffect } from 'react';
+import { sidebarState } from '../../../store/atom/sidebar';
+import { chattingState } from '../../../store/atom/chatting';
+import { socketState } from '../../../store/atom/socket';
+import UserItem from './userItem';
 
 const FriendItem = ({ friend }: { friend: friendType }) => {
+  const socket = useRecoilValue(socketState);
   const [friends, setFriends] = useRecoilState(friendsState);
+  const setChatTarget = useSetRecoilState(chattingState);
+  const setCurrentTab = useSetRecoilState(sidebarState);
 
-  const { id, isOnline, nickname } = friend;
+  const { id, nickname } = friend;
 
   const sendChatting = () => {
-    alert(`${nickname}님과 채팅하기`);
+    socket.emit('chatRoomEntered', { targetUserId: id });
+    setChatTarget({
+      id: id,
+      nickname: nickname,
+    });
+    setCurrentTab('chatting');
   };
 
   const unfollowing = async () => {
@@ -26,7 +37,7 @@ const FriendItem = ({ friend }: { friend: friendType }) => {
 
         const newFriend = { ...friends };
 
-        delete newFriend[nickname];
+        delete newFriend[id];
         setFriends(newFriend);
 
         alert(`${nickname}님을 언팔로우 하였습니다.`);
@@ -37,15 +48,16 @@ const FriendItem = ({ friend }: { friend: friendType }) => {
   };
 
   return (
-    <Content draggable={isOnline}>
-      <section id={id} css={friendItemWrapper(isOnline)}>
-        <div css={userName(isOnline)}>{nickname}</div>
-        <div>
-          <img src={message} alt="채팅하기" onClick={sendChatting}></img>
-          <img src={unfollow} alt="친구 끊기" onClick={unfollowing}></img>
-        </div>
-      </section>
-    </Content>
+    <UserItem friend={friend}>
+      <div>
+        <button onClick={sendChatting}>
+          <img src={message} alt="채팅하기 버튼"></img>
+        </button>
+        <button onClick={unfollowing}>
+          <img src={unfollow} alt="친구 끊기 버튼"></img>
+        </button>
+      </div>
+    </UserItem>
   );
 };
 
